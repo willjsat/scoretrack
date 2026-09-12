@@ -38,8 +38,10 @@ test('discovers the active season from a default rankings request', async () => 
     return { ok: true, async json() { return { rankings: { params: { season: 'season-live-1' } } }; } };
   } });
   assert.equal(await provider.activeSeason(), 'season-live-1');
-  assert.equal(requestedUrl.pathname, '/api/v1/mythic-plus/rankings/characters');
+  assert.equal(requestedUrl.pathname, '/api/mythic-plus/rankings/characters');
   assert.equal(requestedUrl.searchParams.has('season'), false);
+  assert.equal(requestedUrl.searchParams.get('class'), 'mage');
+  assert.equal(requestedUrl.searchParams.get('spec'), 'frost');
 });
 
 test('keeps the API active-season default when its label is absent', async () => {
@@ -51,4 +53,18 @@ test('keeps the API active-season default when its label is absent', async () =>
   assert.equal(await provider.activeSeason(), 'current');
   await provider.rankings({ season: 'current', className: 'Mage', specName: 'Frost' });
   assert.equal(urls.every(url => !url.searchParams.has('season')), true);
+});
+
+test('uses Raider.IO website ranking filters for classes and specializations', async () => {
+  let requestedUrl;
+  const provider = new RaiderIO({ retries: 0, fetchImpl: async url => {
+    requestedUrl = url;
+    return { ok: true, async json() { return {}; } };
+  } });
+  await provider.rankings({ season: 'season-live-1', className: 'Death Knight', specName: null, page: 7 });
+  assert.equal(requestedUrl.pathname, '/api/mythic-plus/rankings/characters');
+  assert.equal(requestedUrl.searchParams.get('class'), 'death-knight');
+  assert.equal(requestedUrl.searchParams.get('spec'), 'all');
+  assert.equal(requestedUrl.searchParams.get('faction'), 'all');
+  assert.equal(requestedUrl.searchParams.get('page'), '7');
 });

@@ -4,7 +4,7 @@ A zero-database web dashboard that shows the live Mythic+ score needed to sit at
 
 ## Why Raider.IO?
 
-ScoreTrack uses [Raider.IO's public API](https://raider.io/api) because Raider.IO maintains a queryable worldwide Mythic+ character ranking, including class and specialization filters. Blizzard's [Mythic Keystone Leaderboard API](https://develop.battle.net/documentation/world-of-warcraft/game-data-apis) exposes timed leaderboard runs rather than a complete, filterable character-score population; Warcraft Logs is centered on combat logs and parses. For percentile boundaries, Raider.IO is therefore the closest match to the data this product actually needs.
+ScoreTrack uses [Raider.IO's ranking API](https://raider.io/api) because Raider.IO maintains a queryable worldwide Mythic+ character ranking, including class and specialization filters. Blizzard's [Mythic Keystone Leaderboard API](https://develop.battle.net/documentation/world-of-warcraft/game-data-apis) exposes timed leaderboard runs rather than a complete, filterable character-score population; Warcraft Logs is centered on combat logs and parses. For percentile boundaries, Raider.IO is therefore the closest match to the data this product actually needs.
 
 The app does not treat Raider.IO's published title cutoffs as spec percentiles. Instead, it:
 
@@ -37,6 +37,8 @@ Environment variables can be supplied directly:
 Run a one-off refresh with `npm run refresh`. The server otherwise refreshes immediately at startup and every three hours after each attempt. The browser polls server status, displays a second-accurate countdown, and preserves the last successful snapshot if Raider.IO is temporarily unavailable.
 
 Season discovery intentionally uses a ranking request with no `season` parameter. Raider.IO defaults that request to the active season and returns the resolved season in the response. Its static-data route is not used because that endpoint requires an `expansion_id`, creating a circular dependency when the current expansion is not already known.
+
+The rankings route lives at `/api/mythic-plus/rankings/characters`. It is distinct from Raider.IO's documented `/api/v1` character-profile routes; adding the `v1` prefix produces a 404. ScoreTrack sends Raider.IO's lowercase hyphenated filter values and explicit `all` spec/faction filters.
 
 ## Deploy
 

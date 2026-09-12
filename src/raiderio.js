@@ -1,4 +1,4 @@
-const BASE_URL = 'https://raider.io/api/v1';
+const API_ROOT = 'https://raider.io/api';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -10,7 +10,7 @@ export class RaiderIO {
   }
 
   async get(path, params = {}) {
-    const url = new URL(`${BASE_URL}/${path}`);
+    const url = new URL(`${API_ROOT}/${path}`);
     Object.entries(params).forEach(([key, value]) => value != null && url.searchParams.set(key, value));
     for (let attempt = 0; attempt <= this.retries; attempt++) {
       const response = await this.fetch(url, {
@@ -43,9 +43,14 @@ export class RaiderIO {
   async rankings({ season, className, specName, page = 0 }) {
     return this.get('mythic-plus/rankings/characters', {
       region: 'world', season: season === 'current' ? null : season,
-      class: className, spec: specName, role: 'all', page
+      class: toFilter(className), spec: specName ? toFilter(specName) : 'all',
+      role: 'all', faction: 'all', page
     });
   }
+}
+
+function toFilter(value) {
+  return value?.toLowerCase().replaceAll(' ', '-');
 }
 
 export function normalizePage(payload) {
