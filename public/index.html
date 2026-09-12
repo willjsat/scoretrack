@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Live Mythic+ score thresholds for every World of Warcraft class and specialization.">
+  <title>ScoreTrack — Mythic+ Percentile Cutoffs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="glow glow-one"></div><div class="glow glow-two"></div>
+  <header>
+    <a class="brand" href="/"><span class="brand-mark">S</span><span>ScoreTrack</span></a>
+    <div class="live"><span class="pulse"></span> LIVE DATA</div>
+  </header>
+  <main>
+    <section class="hero">
+      <div class="eyebrow">MYTHIC+ · WORLDWIDE</div>
+      <h1>Know the score.<br><span>Push the threshold.</span></h1>
+      <p>Live score cutoffs for the top-performing players across every class and specialization.</p>
+      <div class="refresh-card">
+        <div><span class="label">NEXT DATA REFRESH</span><strong id="countdown">--:--:--</strong></div>
+        <div class="divider"></div>
+        <div><span class="label">CURRENT SEASON</span><strong id="season">LOADING</strong></div>
+        <div class="divider desktop"></div>
+        <div class="desktop"><span class="label">LAST UPDATED</span><strong id="updated">—</strong></div>
+      </div>
+    </section>
+
+    <section class="rankings">
+      <div class="section-head">
+        <div><span class="kicker">THE BREAKPOINT</span><h2>Score thresholds</h2></div>
+        <div class="controls">
+          <div class="tabs" role="tablist"><button class="active" data-type="spec">Specializations</button><button data-type="class">Classes</button></div>
+          <label class="search"><span>⌕</span><input id="search" type="search" placeholder="Search class or spec" aria-label="Search rankings"></label>
+        </div>
+      </div>
+      <div id="notice" class="notice">Connecting to Raider.IO…</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>CLASS / SPECIALIZATION</th><th>TOP 5% <small>SCORE</small></th><th>TOP 1% <small>SCORE</small></th><th class="population">PLAYERS</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div class="method"><span>i</span><p><strong>How thresholds work</strong> We rank the worldwide Raider.IO population for each category. The displayed score is held by the player at the 5th or 1st percentile boundary—not an estimate or an average.</p></div>
+    </section>
+  </main>
+  <footer><span>ScoreTrack</span><span>Data provided by <a href="https://raider.io" target="_blank" rel="noreferrer">Raider.IO ↗</a></span><span>Refreshes every 3 hours</span></footer>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
