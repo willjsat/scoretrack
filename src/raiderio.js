@@ -3,9 +3,10 @@ const API_ROOT = 'https://raider.io/api';
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 export class RaiderIO {
-  constructor({ fetchImpl = fetch, season, retries = 3 } = {}) {
+  constructor({ fetchImpl = fetch, season, expansionId = 11, retries = 3 } = {}) {
     this.fetch = fetchImpl;
     this.season = season;
+    this.expansionId = expansionId;
     this.retries = retries;
   }
 
@@ -26,23 +27,27 @@ export class RaiderIO {
 
   async activeSeason() {
     if (this.season) return this.season;
-    // The static-data route requires an expansion_id and therefore cannot be
-    // used to discover the expansion. Rankings defaults to the active season,
-    // and echoes the resolved season in its response parameters.
-    const data = await this.rankings({ className: 'Mage', specName: 'Frost', page: 0 });
-    const season = data.rankings?.params?.season
-      ?? data.params?.season
-      ?? data.rankings?.season?.slug
-      ?? data.season?.slug
-      ?? data.season;
-    // Keep omitting the season query if Raider.IO changes where it exposes the
-    // label. The rankings API will continue to use its active-season default.
-    return typeof season === 'string' && season ? season : 'current';
+    const data = await this.get('v1/mythic-plus/static-data', { expansion_id: this.expansionId });
+    const seasons = data.seasons ?? data.seasonData ?? [];
+    const now = Date.now();
+    const inProgress = season => {
+      const startsAt = dateValue(season.starts?.us ?? season.startsAt ?? season.start);
+      const endsAt = dateValue(season.ends?.us ?? season.endsAt ?? season.end);
+      return startsAt <= now && now < endsAt;
+    };
+    const active = data.currentSeason ?? data.current_season
+      ?? seasons.find(season => season.current || season.isCurrent || season.is_current)
+      ?? seasons.find(inProgress);
+    const slug = typeof active === 'string' ? active : active?.slug ?? active?.id ?? active?.season;
+    if (!slug) {
+      throw new Error(`Raider.IO returned no active season for expansion ${this.expansionId}. Set RAIDER_IO_SEASON explicitly.`);
+    }
+    return slug;
   }
 
   async rankings({ season, className, specName, page = 0 }) {
     return this.get('mythic-plus/rankings/characters', {
-      region: 'world', season: season === 'current' ? null : season,
+      region: 'world', season,
       class: toFilter(className), spec: specName ? toFilter(specName) : 'all',
       role: 'all', faction: 'all', page
     });
@@ -51,6 +56,12 @@ export class RaiderIO {
 
 function toFilter(value) {
   return value?.toLowerCase().replaceAll(' ', '-');
+}
+
+function dateValue(value) {
+  if (typeof value === 'number') return value < 1e12 ? value * 1000 : value;
+  const parsed = Date.parse(value ?? '');
+  return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
 }
 
 export function normalizePage(payload) {

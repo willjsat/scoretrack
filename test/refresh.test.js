@@ -31,28 +31,26 @@ test('fetches pages containing the exact percentile boundary ranks', async () =>
   assert.equal(result.top5, 3950);
 });
 
-test('discovers the active season from a default rankings request', async () => {
+test('discovers the active season using the required expansion ID', async () => {
   let requestedUrl;
-  const provider = new RaiderIO({ retries: 0, fetchImpl: async url => {
+  const provider = new RaiderIO({ expansionId: 11, retries: 0, fetchImpl: async url => {
     requestedUrl = url;
-    return { ok: true, async json() { return { rankings: { params: { season: 'season-live-1' } } }; } };
+    return { ok: true, async json() { return { seasons: [{ slug: 'season-live-1', current: true }] }; } };
   } });
   assert.equal(await provider.activeSeason(), 'season-live-1');
-  assert.equal(requestedUrl.pathname, '/api/mythic-plus/rankings/characters');
-  assert.equal(requestedUrl.searchParams.has('season'), false);
-  assert.equal(requestedUrl.searchParams.get('class'), 'mage');
-  assert.equal(requestedUrl.searchParams.get('spec'), 'frost');
+  assert.equal(requestedUrl.pathname, '/api/v1/mythic-plus/static-data');
+  assert.equal(requestedUrl.searchParams.get('expansion_id'), '11');
 });
 
-test('keeps the API active-season default when its label is absent', async () => {
-  const urls = [];
+test('discovers an active season from Unix timestamps', async () => {
+  const now = Math.floor(Date.now() / 1000);
   const provider = new RaiderIO({ retries: 0, fetchImpl: async url => {
-    urls.push(url);
-    return { ok: true, async json() { return { rankings: {} }; } };
+    return { ok: true, async json() { return { seasons: [
+      { slug: 'season-old', starts: { us: now - 2000 }, ends: { us: now - 1000 } },
+      { slug: 'season-live-2', starts: { us: now - 100 }, ends: { us: now + 1000 } }
+    ] }; } };
   } });
-  assert.equal(await provider.activeSeason(), 'current');
-  await provider.rankings({ season: 'current', className: 'Mage', specName: 'Frost' });
-  assert.equal(urls.every(url => !url.searchParams.has('season')), true);
+  assert.equal(await provider.activeSeason(), 'season-live-2');
 });
 
 test('uses Raider.IO website ranking filters for classes and specializations', async () => {
@@ -67,4 +65,5 @@ test('uses Raider.IO website ranking filters for classes and specializations', a
   assert.equal(requestedUrl.searchParams.get('spec'), 'all');
   assert.equal(requestedUrl.searchParams.get('faction'), 'all');
   assert.equal(requestedUrl.searchParams.get('page'), '7');
+  assert.equal(requestedUrl.searchParams.get('season'), 'season-live-1');
 });

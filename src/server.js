@@ -10,7 +10,10 @@ const port = Number(process.env.PORT ?? 3000);
 const intervalMs = Number(process.env.REFRESH_INTERVAL_HOURS ?? 3) * 60 * 60 * 1000;
 const root = resolve(fileURLToPath(new URL('../public', import.meta.url)));
 const dataFile = resolve(process.env.DATA_FILE ?? './data/scores.json');
-const provider = new RaiderIO({ season: process.env.RAIDER_IO_SEASON });
+const provider = new RaiderIO({
+  season: process.env.RAIDER_IO_SEASON,
+  expansionId: Number(process.env.RAIDER_IO_EXPANSION_ID ?? 11)
+});
 let snapshot = await readStore(dataFile);
 let refreshing = false;
 let lastError = null;
