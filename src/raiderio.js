@@ -26,26 +26,24 @@ export class RaiderIO {
 
   async activeSeason() {
     if (this.season) return this.season;
-    const data = await this.get('mythic-plus/static-data', { region: 'world' });
-    const seasons = data.seasons ?? data.seasonData ?? [];
-    const now = Date.now();
-    const inDateRange = item => {
-      const start = Date.parse(item.starts?.us ?? item.startsAt ?? item.start ?? '');
-      const end = Date.parse(item.ends?.us ?? item.endsAt ?? item.end ?? '');
-      return Number.isFinite(start) && start <= now && (!Number.isFinite(end) || now < end);
-    };
-    const active = data.currentSeason ?? data.current_season
-      ?? seasons.find(item => item.current || item.isCurrent || item.is_current)
-      ?? seasons.find(inDateRange)
-      ?? seasons.at(-1);
-    const season = typeof active === 'string' ? active : active?.slug ?? active?.id ?? active?.season;
-    if (!season) throw new Error('Could not determine the active Mythic+ season. Set RAIDER_IO_SEASON.');
-    return season;
+    // The static-data route requires an expansion_id and therefore cannot be
+    // used to discover the expansion. Rankings defaults to the active season,
+    // and echoes the resolved season in its response parameters.
+    const data = await this.rankings({ className: 'Mage', specName: 'Frost', page: 0 });
+    const season = data.rankings?.params?.season
+      ?? data.params?.season
+      ?? data.rankings?.season?.slug
+      ?? data.season?.slug
+      ?? data.season;
+    // Keep omitting the season query if Raider.IO changes where it exposes the
+    // label. The rankings API will continue to use its active-season default.
+    return typeof season === 'string' && season ? season : 'current';
   }
 
   async rankings({ season, className, specName, page = 0 }) {
     return this.get('mythic-plus/rankings/characters', {
-      region: 'world', season, class: className, spec: specName, role: 'all', page
+      region: 'world', season: season === 'current' ? null : season,
+      class: className, spec: specName, role: 'all', page
     });
   }
 }

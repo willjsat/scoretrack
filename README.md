@@ -32,9 +32,11 @@ Environment variables can be supplied directly:
 | `PORT` | `3000` | HTTP port |
 | `REFRESH_INTERVAL_HOURS` | `3` | Refresh cadence |
 | `DATA_FILE` | `./data/scores.json` | Snapshot location; mount this path for persistence in a container |
-| `RAIDER_IO_SEASON` | auto-detected | Override the season slug if the static-data endpoint is unavailable |
+| `RAIDER_IO_SEASON` | auto-detected | Override the season slug if needed |
 
 Run a one-off refresh with `npm run refresh`. The server otherwise refreshes immediately at startup and every three hours after each attempt. The browser polls server status, displays a second-accurate countdown, and preserves the last successful snapshot if Raider.IO is temporarily unavailable.
+
+Season discovery intentionally uses a ranking request with no `season` parameter. Raider.IO defaults that request to the active season and returns the resolved season in the response. Its static-data route is not used because that endpoint requires an `expansion_id`, creating a circular dependency when the current expansion is not already known.
 
 ## Deploy
 
